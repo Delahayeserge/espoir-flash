@@ -1,0 +1,1146 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#29204b">
+<title>Espoir Flash — Marketplace</title>
+<style>
+:root{--ink:#29204b;--gold:#f5b63e;--bg:#f5f4f8;--muted:#777386;--line:#e9e6ef}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:#211d2e}
+header{background:var(--ink);color:white;padding:18px 16px 22px;border-radius:0 0 22px 22px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:21px}.bolt{background:var(--gold);color:var(--ink);width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:23px}
+.tag{color:#eee9fa;font-size:12px;margin:4px 0 16px 48px}.search{display:flex;gap:8px}.search input{flex:1;min-width:0}
+main{max-width:760px;margin:auto;padding:15px 14px 95px}h2{font-size:18px;margin:20px 0 12px}.sub{font-size:13px;color:var(--muted);margin-top:-6px}
+input,select,textarea{font:inherit;border:1px solid var(--line);border-radius:10px;padding:11px;width:100%;background:white}
+button{border:0;border-radius:11px;padding:11px 13px;background:var(--ink);color:white;font-weight:700;cursor:pointer}
+.search input{border:0;border-radius:12px;padding:13px}.categories{display:flex;gap:8px;overflow:auto;padding:2px 0 8px}.chip{border:1px solid var(--line);background:white;border-radius:20px;padding:9px 13px;white-space:nowrap;font-size:12px}.chip.active{background:var(--ink);color:white}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.product,.card{background:white;border:1px solid var(--line);border-radius:15px;overflow:hidden}.photo{height:105px;background:linear-gradient(135deg,#eeeaf7,#fff2d8);display:grid;place-items:center;font-size:42px}.pbody{padding:11px}.pname{font-weight:700;font-size:14px;min-height:34px}.meta,.muted{color:var(--muted);font-size:12px;margin:5px 0}.price{font-weight:800;color:var(--ink);font-size:15px;margin:7px 0}.add{width:100%;background:var(--gold);color:var(--ink);padding:10px}
+.card{padding:14px;margin:12px 0}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}label{display:block;font-size:12px;font-weight:700;margin:10px 0 5px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.notice{background:#fff7e7;border:1px solid #f3dfb5;padding:12px;border-radius:12px;font-size:12px;line-height:1.45}.empty{text-align:center;padding:30px 10px;color:var(--muted)}.qty{display:flex;align-items:center;gap:8px}.qty button{padding:5px 10px}.hidden{display:none!important}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--line);display:flex;justify-content:center;z-index:4;padding:8px}.nav{max-width:760px;width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.nav button{background:white;color:#777386;padding:8px 3px;font-size:11px}.nav button.active{background:#f0edf8;color:var(--ink)}.ico{display:block;font-size:18px;margin-bottom:3px}
+@media(min-width:600px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.photo{height:125px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><span class="bolt">ϟ</span><span>ESPOIR FLASH</span></div><div class="tag">Le commerce à portée de main · Odienné</div><div class="search"><input id="search" placeholder="Rechercher un produit ou une boutique…"><button onclick="loadProducts()">Chercher</button></div></header>
+<main>
+<section id="home"><div class="row"><div><h2>Bienvenue sur Espoir Flash 👋</h2><div class="sub">Achetez auprès des commerces d'Odienné.</div></div><strong id="cartCount">🛒 0</strong></div><h2>Catégories</h2><div class="categories" id="categories"></div><div class="row"><h2>Produits disponibles</h2><span class="muted" id="productCount"></span></div><div class="grid" id="products"></div></section>
+<section id="cart" class="hidden"><h2>Mon panier</h2><div id="cartItems"></div><div class="card"><div class="row"><strong>Total estimé</strong><strong id="total">0 FCFA</strong></div><label>Adresse de livraison à Odienné</label><textarea id="address" rows="2" placeholder="Quartier, repère, détails…"></textarea><label>Note (facultatif)</label><input id="note" placeholder="Précision pour le commerçant"><button style="width:100%;margin-top:12px" onclick="placeOrder()">Envoyer la commande</button></div></section><label>Photo du produit</label>
+<input id="newPhoto" type="file" accept="image/*">
+
+<section id="account" class="hidden">
+ <h2>Mon compte</h2><div class="card">
+ <h3>Déposer une réclamation</h3>
+<textarea id="complaintMessage" placeholder="Décris ta réclamation"></textarea>
+   <button onclick="submitComplaint()">Envoyer la réclamation</button>
+ <input id="complaintSubject" placeholder="Sujet de la réclamation">
+
+<div id="myComplaints">
+ <h3>Mes réclamations</h3>
+ <p>Chargement de tes réclamations...</p>
+</div>
+
+ <div id="authPanel" class="card">
+  <p class="sub">Connecte-toi ou crée ton compte client/commerçant.</p>
+
+  <label>Nom complet</label>
+  <input id="fullName" placeholder="Nom et prénom">
+
+  <label>Téléphone</label>
+  <input id="phone" placeholder="07…">
+
+  <label>Adresse e-mail</label>
+  <input id="email" type="email" placeholder="exemple@email.com">
+
+  <label>Mot de passe</label>
+  <input id="password" type="password" placeholder="Au moins 6 caractères">
+
+  <label>Type de compte</label>
+  <select id="role">
+   <option value="customer">Client</option>
+   <option value="merchant">Commerçant</option>
+  </select>
+
+  <div class="formgrid" style="margin-top:12px">
+   <button onclick="signUp()">Créer un compte</button>
+   <button onclick="signIn()">Se connecter</button>
+  </div>
+ </div>
+
+ <div id="loggedPanel" class="card hidden">
+
+  <div id="whoami"></div>
+<div id="adminDashboard" class="hidden"><div id="adminAuditLogs"></div>
+  <h3>🛡️ Administration Espoir Flash</h3>
+  <div id="adminStats"></div>
+  <div id="adminUsers"></div>
+  <div id="adminStores"></div>
+  <div id="adminProducts"></div>
+  <div id="adminOrders"></div>
+  <div id="adminComplaints"></div>
+</div>
+  <div id="storeForm" class="hidden">
+   <h3>Créer ma boutique</h3>
+   <label>Nom de la boutique</label>
+   <input id="storeName" placeholder="Ex. Boutique Chez Awa">
+
+   <label>Description</label>
+   <input id="storeDescription" placeholder="Ce que vend votre boutique">
+
+   <button onclick="createStore()" style="width:100%;margin-top:10px">
+    Créer ma boutique
+   </button>
+  </div>
+
+  <div id="productForm" class="hidden">
+   <h3>Ajouter un produit</h3>
+
+   <label>Nom du produit</label>
+   <input id="newName" placeholder="Ex. Sac de ciment 50 kg">
+
+   <div class="formgrid">
+    <div>
+     <label>Prix (FCFA)</label>
+     <input id="newPrice" type="number" min="1">
+    </div>
+    <div>
+     <label>Stock</label>
+     <input id="newStock" type="number" min="0" value="1">
+    </div>
+   </div>
+
+   <label>Catégorie</label>
+   <select id="newCategory">
+    <option>Construction</option>
+    <option>Alimentation</option>
+    <option>Électronique</option>
+    <option>Mode</option>
+    <option>Électricité</option>
+    <option>Beauté</option>
+    <option>Autre</option>
+   </select>
+
+   <label>Photo du produit</label>
+   <input id="newPhoto" type="file" accept="image/*">
+
+   <button onclick="addProduct()" style="width:100%;margin-top:10px">
+    Publier le produit
+   </button>
+  </div>
+
+  <h3 style="color:#29204b;">🏪 Espace commerçant</h3>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;">
+   <button onclick="document.getElementById('merchantDashboard').scrollIntoView({behavior:'smooth',block:'start'})">
+    📊 Statistiques
+   </button>
+
+   <button onclick="document.getElementById('merchantProducts').scrollIntoView({behavior:'smooth',block:'start'})">
+    🛍️ Mes produits
+   </button>
+
+   <button onclick="showTab('orders',document.querySelector('[data-tab=orders]'))">
+    📦 Mes commandes
+   </button>
+  </div>
+
+  <div id="merchantDashboard" class="hidden"></div>
+
+  <div id="merchantProducts" class="hidden"></div>
+
+  <button onclick="signOut()" style="margin-top:14px;background:#8b3040">
+   Se déconnecter
+  </button>
+
+ </div>
+</section>
+
+<section id="orders" class="hidden"><h2>Mes commandes</h2><div id="myOrders"></div></section>
+<div class="notice" style="margin-top:16px">Version de démarrage : connexion, catalogue, boutique et commandes en ligne. Aucun paiement mobile ni livraison automatique n'est intégré pour le moment.</div>
+</main>
+<div class="bottom"><nav class="nav"><button class="active" data-tab="home" onclick="showTab('home',this)"><span class="ico">⌂</span>Accueil</button><button data-tab="cart" onclick="showTab('cart',this)"><span class="ico">🛒</span>Panier</button><button data-tab="account" onclick="showTab('account',this)">
+ <span class="ico">👤</span>Compte
+ <span id="accountAlert" style="display:none;color:red;font-size:18px;">●</span>
+</button><button data-tab="orders" onclick="showTab('orders',this)"><span class="ico">▦</span>Commandes</button></nav></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// CONFIGURATION : remplace UNIQUEMENT la valeur de SUPABASE_PUBLISHABLE_KEY par ta clé sb_publishable_...
+const SUPABASE_URL = "https://yghxqywearatsyejvqqp.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_0_vJhKfvdmnC94FGdB7mZA_JV2tDlol";
+let db = null, currentUser = null, currentProfile = null, currentStore = null, currentIsAdmin = false;
+let products = [], cart = {}, activeCategory = "Tout";
+const cats=["Tout","Construction","Alimentation","Électronique","Mode","Électricité","Beauté","Autre"];
+const money=n=>Number(n||0).toLocaleString("fr-FR")+" FCFA";function statusFr(status){
+ const labels={
+  pending:"En attente",
+  accepted:"Acceptée",
+  completed:"Terminée",
+  cancelled:"Annulée"
+ };
+ return labels[status]||status;
+  }
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function initClient(){
+ if(!window.supabase){alert("Connexion Internet nécessaire pour charger la bibliothèque Supabase.");return false}
+ if(SUPABASE_PUBLISHABLE_KEY==="COLLER_ICI_LA_CLE_PUBLIABLE"){alert("Il manque la clé PUBLIABLE Supabase. Ouvre le fichier dans Acode et remplace le texte COLLER_ICI_LA_CLE_PUBLIABLE.");return false}
+ db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);return true;
+}
+function showTab(id,btn){document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");if(id==="cart")renderCart();if(id==="account")refreshAccount();if(id==="orders")loadOrders()}
+function renderCategories(){document.getElementById("categories").innerHTML=cats.map(c=>`<button class="chip ${activeCategory===c?'active':''}" onclick="activeCategory='${c}';renderCategories();loadProducts()">${c}</button>`).join("")}
+async function loadProducts(){
+ if(!db)return;let q=document.getElementById("search").value.trim();
+ let {data,error}=await db.from("products").select("id,name,category,price_fcfa,stock,image_url,stores(id,name)").eq("active",true).gt("stock",0).order("created_at",{ascending:false});
+ if(error){document.getElementById("products").innerHTML='<div class="empty">Impossible de charger les produits. Vérifie la configuration Supabase.</div>';console.error(error);return}
+ products=(data||[]).map(p=>({...p,shop:p.stores?.name||"Boutique partenaire",price:p.price_fcfa}));
+ let arr=products.filter(p=>(activeCategory==="Tout"||p.category===activeCategory)&&(`${p.name} ${p.shop} ${p.category}`).toLowerCase().includes(q.toLowerCase()));
+ document.getElementById("productCount").textContent=arr.length+" article(s)";
+ document.getElementById("products").innerHTML=arr.length?arr.map(p=>`<article class="product"><div class="photo">${p.image_url?`<img src="${esc(p.image_url)}" style="width:100%;height:100%;object-fit:cover">`:"🛍️"}</div><div class="pbody"><div class="pname">${esc(p.name)}</div><div class="meta">${esc(p.shop)} · ${esc(p.category)}</div><div class="price">${money(p.price)}</div><div class="meta">Stock : ${p.stock}</div><button class="add" onclick="addToCart('${p.id}')">Ajouter au panier</button></div></article>`).join(""):'<div class="empty">Aucun produit publié pour le moment.</div>';
+ updateCount();
+}
+function addToCart(id){let p=products.find(x=>x.id===id);if(!p)return;cart[id]=(cart[id]||0)+1;updateCount();alert("Article ajouté au panier.")}
+function updateCount(){document.getElementById("cartCount").textContent="🛒 "+Object.values(cart).reduce((a,b)=>a+b,0)}
+function renderCart(){let entries=Object.entries(cart).filter(([id,n])=>n>0);let el=document.getElementById("cartItems");if(!entries.length){el.innerHTML='<div class="empty">Ton panier est vide.</div>';document.getElementById("total").textContent=money(0);return}let sum=0;el.innerHTML=entries.map(([id,n])=>{let p=products.find(x=>x.id===id);if(!p)return "";sum+=p.price*n;return `<div class="card"><div class="row"><div><strong>${esc(p.name)}</strong><div class="muted">${money(p.price)} l'unité</div></div><div class="qty"><button onclick="changeQty('${id}',-1)">−</button>${n}<button onclick="changeQty('${id}',1)">+</button></div></div></div>`}).join("");document.getElementById("total").textContent=money(sum)}
+function changeQty(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];renderCart();updateCount()}
+async function placeOrder(){
+ if(!db)return;if(!currentUser){alert("Connecte-toi avant de commander.");showTab("account",document.querySelector('[data-tab="account"]'));return}
+ let entries=Object.entries(cart).filter(([id,n])=>n>0),address=document.getElementById("address").value.trim(),note=document.getElementById("note").value.trim();
+ if(!entries.length)return alert("Ton panier est vide.");if(address.length<4)return alert("Renseigne ton adresse de livraison.");
+ let storeIds=[...new Set(entries.map(([id])=>products.find(p=>p.id===id)?.stores?.id).filter(Boolean))];
+ if(storeIds.length!==1){alert("Pour cette première version, commande les articles d'une seule boutique à la fois.");return}
+ let items=entries.map(([id,quantity])=>({product_id:id,quantity}));
+ let {data,error}=await db.rpc("place_order",{p_delivery_address:address,p_note:note,p_items:items});
+ if(error){alert("Commande non envoyée : "+error.message);return}
+ cart={};updateCount();renderCart();alert("Commande envoyée ! Référence : "+data);showTab("orders",document.querySelector('[data-tab="orders"]'));
+}
+async function signUp(){
+ if(!db)return;let full_name=document.getElementById("fullName").value.trim(),phone=document.getElementById("phone").value.trim(),email=document.getElementById("email").value.trim(),password=document.getElementById("password").value,role=document.getElementById("role").value;
+ if(!full_name||!email||password.length<6)return alert("Renseigne ton nom, ton e-mail et un mot de passe d'au moins 6 caractères.");
+ let {data,error}=await db.auth.signUp({email,password,options:{data:{full_name,phone,requested_role:role}}});
+ if(error)return alert("Création impossible : "+error.message);
+ alert("Compte créé. Si Supabase demande une confirmation par e-mail, ouvre le message reçu puis reconnecte-toi.");
+ if(data.session){currentUser=data.user;await loadProfile();refreshAccount()}
+}
+async function signIn(){if(!db)return;let email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;let {data,error}=await db.auth.signInWithPassword({email,password});if(error)return alert("Connexion impossible : "+error.message);currentUser=data.user;await loadProfile();refreshAccount();alert("Connexion réussie.")}
+async function signOut(){if(db)await db.auth.signOut();currentUser=null;currentProfile=null;currentStore=null;refreshAccount();alert("Déconnexion effectuée.")}
+async function loadProfile(){if(!currentUser)return;let {data,error}=await db.from("profiles").select("*").eq("id",currentUser.id).maybeSingle();if(error){console.error(error);return}currentProfile=data;
+
+let {data:store}=await db.from("stores")
+ .select("*")
+ .eq("owner_id",currentUser.id)
+ .maybeSingle();
+
+currentStore=store;
+
+let {data:isAdmin,error:adminError}=await db.rpc("is_admin");
+
+currentIsAdmin = isAdmin === true;
+if(adminError) console.error("Erreur administrateur :",adminError);
+  }
+function refreshAccount(){
+ let a=document.getElementById("authPanel");
+ let b=document.getElementById("loggedPanel");
+
+ if(!currentUser){
+  a.classList.remove("hidden");
+  b.classList.add("hidden");
+  return;
+ }
+
+ a.classList.add("hidden");
+  loadMyComplaints();if(!window.clientComplaintReplyChannel){
+ window.clientComplaintReplyChannel=db
+  .channel("client-complaint-replies")
+  .on(
+   "postgres_changes",
+   {
+    event:"UPDATE",
+    schema:"public",
+    table:"complaints",
+    filter:"user_id=eq."+currentUser.id
+   },
+   async(payload)=>{
+    await loadMyComplaints();
+   }
+  )
+  .subscribe();
+  }
+ b.classList.remove("hidden");
+
+ document.getElementById("whoami").innerHTML=
+ `Connecté : <strong>${esc(currentProfile?.full_name||currentUser.email)}</strong>
+ <div class="muted">Rôle : ${esc(currentProfile?.role||"client")}</div>`;
+
+ let merchant=currentProfile?.role==="merchant";
+document.getElementById("adminDashboard").classList.toggle("hidden",!currentIsAdmin);if(currentIsAdmin) loadAdminDashboard();
+ document.getElementById("storeForm").classList.toggle("hidden",!merchant||!!currentStore);
+ document.getElementById("productForm").classList.toggle("hidden",!merchant||!currentStore);
+
+ if(currentStore){
+  document.getElementById("whoami").innerHTML+=
+  `<p>Boutique : <strong>${esc(currentStore.name)}</strong></p>`;
+ }
+
+ if(merchant&&currentStore){
+  loadMerchantProducts();loadMerchantDashboard();
+ }else{
+  document.getElementById("merchantProducts").classList.add("hidden");
+ }
+}
+
+async function editProduct(id){
+ let {data:p,error}=await db
+  .from("products")
+  .select("*")
+  .eq("id",id)
+  .single();
+
+ if(error)return alert("Impossible de charger le produit : "+error.message);
+
+ let name=prompt("Nouveau nom du produit :",p.name);
+ if(name===null)return;
+
+ let price=prompt("Nouveau prix en FCFA :",p.price_fcfa);
+ if(price===null)return;
+
+ let stock=prompt("Nouveau stock :",p.stock);
+ if(stock===null)return;
+
+ if(!name.trim()||Number(price)<1||Number(stock)<0)
+  return alert("Vérifie le nom, le prix et le stock.");
+
+ let {error:updateError}=await db
+  .from("products")
+  .update({
+   name:name.trim(),
+   price_fcfa:Number(price),
+   stock:Number(stock)
+  })
+  .eq("id",id);
+
+ if(updateError)return alert("Modification impossible : "+updateError.message);
+
+ alert("Produit modifié !");
+ await loadMerchantProducts();
+ await loadProducts();
+  }async function deleteProduct(id){
+ if(!confirm("Retirer ce produit du catalogue ?"))return;
+
+ let {error}=await db
+  .from("products")
+  .update({active:false})
+  .eq("id",id);
+
+ if(error)return alert("Impossible de retirer le produit : "+error.message);
+
+ alert("Produit retiré du catalogue !");
+ await loadMerchantProducts();
+await loadProducts();
+}
+
+
+async function reactivateProduct(id){
+ let {error}=await db
+  .from("products")
+  .update({active:true})
+  .eq("id",id);
+
+ if(error)return alert("Impossible de remettre en vente : "+error.message);
+
+ alert("Produit remis en vente !");
+ await loadMerchantProducts();
+ await loadProducts();
+}
+
+async function loadMerchantDashboard(){
+ let box=document.getElementById("merchantDashboard");
+ if(!box||!currentStore)return;
+
+ box.classList.remove("hidden");
+ box.innerHTML="<h3>Tableau de bord</h3><p>Chargement...</p>";
+
+ let {data:products,error:pError}=await db
+  .from("products")
+  .select("id,active")
+  .eq("store_id",currentStore.id);
+
+ if(pError)return box.innerHTML="Erreur produits : "+esc(pError.message);
+
+ let {data:orders,error:oError}=await db
+  .from("orders")
+  .select("id,status,total_fcfa")
+  .eq("store_id",currentStore.id);
+
+ if(oError)return box.innerHTML="Erreur commandes : "+esc(oError.message);
+
+ let totalProducts=products.length;
+ let activeProducts=products.filter(p=>p.active).length;
+ let totalOrders=orders.length;
+ let completedOrders=orders.filter(o=>o.status==="completed").length;
+ let pendingOrders=orders.filter(o=>o.status==="pending").length;
+
+let sales=orders
+ .filter(o=>o.status==="completed")
+ 
+  .reduce((sum,o)=>sum+Number(o.total_fcfa||0),0);
+
+ 
+box.innerHTML=`
+  <h3 style="color:#29204b;font-size:22px;margin-bottom:15px;">
+   📊 Tableau de bord
+  </h3>
+
+  <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">
+
+   <div class="card" style="background:#e8f5ee;border-left:4px solid #198754;">
+    <div style="font-size:25px;">🛍️</div>
+    <p>Produits en vente</p>
+    <strong style="font-size:25px;color:#198754;">${activeProducts}</strong>
+   </div>
+
+   <div class="card" style="background:#eef2ff;border-left:4px solid #4056a1;">
+    <div style="font-size:25px;">📦</div>
+    <p>Produits au total</p>
+    <strong style="font-size:25px;color:#4056a1;">${totalProducts}</strong>
+   </div>
+
+   <div class="card" style="background:#fff4df;border-left:4px solid #d99519;">
+    <div style="font-size:25px;">🧾</div>
+    <p>Commandes reçues</p>
+    <strong style="font-size:25px;color:#b7790b;">${totalOrders}</strong>
+   </div>
+
+   <div class="card" style="background:#e8f7f7;border-left:4px solid #168b91;">
+    <div style="font-size:25px;">✅</div>
+    <p>Commandes terminées</p>
+    <strong style="font-size:25px;color:#168b91;">${completedOrders}</strong>
+   </div>
+
+   <div class="card" style="background:#f4eafa;border-left:4px solid #8244a5;grid-column:1/-1;">
+    <div style="font-size:25px;">💰</div>
+    <p>Ventes terminées</p>
+    <strong style="font-size:27px;color:#8244a5;">${money(sales)}</strong>
+   </div>
+
+  </div>
+ `;
+
+}
+
+  async function loadMerchantProducts(){
+ let box=document.getElementById("merchantProducts");
+ if(!currentStore||!box)return;
+
+ box.classList.remove("hidden");
+ box.innerHTML="<h3>Mes produits</h3><p>Chargement...</p>";
+
+ let {data,error}=await db.from("products")
+  .select("id,name,category,price_fcfa,stock,image_url,active")
+  .eq("store_id",currentStore.id)
+  .order("created_at",{ascending:false});
+
+ if(error){
+  box.innerHTML="<h3>Mes produits</h3><p>Erreur : "+esc(error.message)+"</p>";
+  return;
+ }
+
+ if(!data||!data.length){
+  box.innerHTML="<h3>Mes produits</h3><p>Aucun produit pour le moment.</p>";
+  return;
+ }
+
+ box.innerHTML="<h3>Mes produits</h3>"+data.map(p=>`
+  <div class="card">
+   <strong>${esc(p.name)}</strong>
+   <p>${money(p.price_fcfa)} · Stock : ${p.stock}</p>
+   <p>${esc(p.category)}</p>
+   <button onclick="editProduct('${p.id}')">Modifier</button>
+   <button onclick="editProduct('${p.id}')">Modifier</button>
+
+${p.active
+? `<button onclick="toggleProductStatus('${p.id}',false)" style="background:#8b3040">Retirer</button>`
+ : `<button onclick="toggleProductStatus('${p.id}',true)" style="background:#198754">Remettre en vente</button>`
+}</div>
+ `).join("");
+}
+
+async function createStore(){
+ if(!db||!currentUser)return;
+
+ let name=document.getElementById("storeName").value.trim();
+ let description=document.getElementById("storeDescription").value.trim();
+
+ if(!name)return alert("Saisis le nom de ta boutique.");
+
+ let {data,error}=await db.from("stores")
+  .insert({owner_id:currentUser.id,name,description})
+  .select().single();
+
+ if(error)return alert("Création de boutique impossible : "+error.message);
+
+ currentStore=data;
+ refreshAccount();
+ alert("Boutique créée !");
+}
+
+async function addProduct(){
+ if(!db||!currentStore)return;
+
+ let name=document.getElementById("newName").value.trim();
+ let price=Number(document.getElementById("newPrice").value);
+ let stock=Number(document.getElementById("newStock").value);
+ let category=document.getElementById("newCategory").value;
+ let photo=document.getElementById("newPhoto").files[0];
+
+ if(!name||price<1||stock<0)
+  return alert("Vérifie le nom, le prix et le stock.");
+
+ let imageUrl=null;
+
+ if(photo){
+  let fileName=Date.now()+"-"+photo.name.replace(/[^a-zA-Z0-9.-]/g,"_");
+
+  let {error:uploadError}=await db.storage
+   .from("product-images")
+   .upload(fileName,photo);
+
+  if(uploadError)
+   return alert("Erreur photo : "+uploadError.message);
+
+  let {data:imageData}=db.storage
+   .from("product-images")
+   .getPublicUrl(fileName);
+
+  imageUrl=imageData.publicUrl;
+ }
+
+ let {error}=await db.from("products").insert({
+  store_id:currentStore.id,
+  name,
+  category,
+  price_fcfa:price,
+  stock,
+  image_url:imageUrl,
+  active:true
+ });
+
+ if(error)return alert("Publication impossible : "+error.message);
+
+ document.getElementById("newName").value="";
+ document.getElementById("newPrice").value="";
+ document.getElementById("newPhoto").value="";
+
+ await loadProducts();
+ alert("Produit publié en ligne !");
+}
+
+
+async function loadOrders(){
+ let el=document.getElementById("myOrders");
+ if(!db||!currentUser){
+  el.innerHTML='<div class="empty">Connecte-toi pour voir tes commandes.</div>';
+  return;
+ }
+
+ let html="";
+
+ // Commandes passées par le client
+ let {data:mine,error:err1}=await db.from("orders")
+  .select("id,status,total_fcfa,delivery_address,note,created_at,order_items(product_name,quantity)")
+  .eq("customer_id",currentUser.id)
+  .order("created_at",{ascending:false});
+
+ if(err1){
+  el.textContent="Erreur : "+err1.message;
+  return;
+ }
+
+ html+='<h3>Mes achats</h3>';
+
+ html+=mine?.length?mine.map(o=>`
+  <div class="card">
+   <strong>Commande ${esc(o.id.slice(0,8))}</strong>
+   <div class="muted">${new Date(o.created_at).toLocaleString("fr-FR")} · ${esc(statusFr(o.status))}</div>
+   <p>${(o.order_items||[]).map(i=>esc(i.product_name)+" × "+i.quantity).join(", ")}</p>
+   <strong>${money(o.total_fcfa)}</strong>
+   <div class="muted">Livraison : ${esc(o.delivery_address)}</div>
+  </div>`).join(""):'<div class="empty">Aucun achat.</div>';
+
+ // Commandes reçues par le marchand
+ if(currentProfile?.role==="merchant" && currentStore){
+  let {data:received,error:err2}=await db.from("orders")
+   .select("id,status,total_fcfa,delivery_address,note,created_at,customer_id,order_items(product_name,quantity)")
+   .eq("store_id",currentStore.id)
+   .order("created_at",{ascending:false});
+
+  if(err2){
+   el.innerHTML=html+'<p>Erreur commandes boutique : '+esc(err2.message)+'</p>';
+   return;
+  }
+let customerMap = {};
+let customerIds = [...new Set((received||[]).map(o=>o.customer_id).filter(Boolean))];
+
+if(customerIds.length){
+ let {data:customers,error:customerError}=await db
+  .from("profiles")
+  .select("id,full_name,phone")
+  .in("id",customerIds);
+
+ if(!customerError){
+  (customers||[]).forEach(c=>customerMap[c.id]=c);
+ }
+  }
+  html+='<h3>Commandes reçues par ma boutique</h3>';
+
+  html+=received?.length?received.map(o=>`
+   <div class="card">
+    <strong>Commande ${esc(o.id.slice(0,8))}</strong>
+    <div class="muted">${new Date(o.created_at).toLocaleString("fr-FR")}</div><p>Client : ${esc(customerMap[o.customer_id]?.full_name||"Nom non disponible")}</p>
+<p>Téléphone : ${esc(customerMap[o.customer_id]?.phone||"Non renseigné")}</p><button onclick="contactWhatsApp('${esc(customerMap[o.customer_id]?.phone||"")}','${esc(customerMap[o.customer_id]?.full_name||"Client")}')" style="background:#25D366;color:white">
+ Contacter sur WhatsApp
+</button>
+    <p>Statut : <strong>${esc(statusFr(o.status))}</strong></p>
+<button onclick="updateOrderStatus('${o.id}','accepted')">Accepter la commande</button><button onclick="updateOrderStatus('${o.id}','cancelled')" style="background:#b83232">Refuser la commande</button>
+<button onclick="updateOrderStatus('${o.id}','completed')" style="background:#23864b">Terminer la commande</button>
+    <p>${(o.order_items||[]).map(i=>esc(i.product_name)+" × "+i.quantity).join(", ")}</p>
+    <strong>${money(o.total_fcfa)}</strong>
+    <p>Adresse : ${esc(o.delivery_address)}</p>
+    <p>Note : ${esc(o.note||"Aucune")}</p>
+   </div>`).join(""):'<div class="empty">Aucune commande reçue.</div>';
+ }
+
+ el.innerHTML=html;
+}
+
+async function updateOrderStatus(id,status){
+ if(status==="cancelled"){
+  if(!confirm("Veux-tu vraiment refuser cette commande ?"))return;
+ }
+
+ let {error}=await db.from("orders")
+  .update({status:status})
+  .eq("id",id);
+
+ if(error){
+  alert("Modification impossible : "+error.message);
+  return;
+ }
+
+ alert(status==="cancelled"?"Commande refusée avec succès !":"Statut de la commande modifié !");
+
+ await loadOrders();
+ await loadMerchantDashboard();
+}async function adminUpdateOrderStatus(id,status){
+ if(!currentIsAdmin)return;
+
+ if(!confirm("Confirmer la modification du statut de cette commande ?"))return;
+
+ let {error}=await db.from("orders")
+  .update({status:status})
+  .eq("id",id);
+
+ if(error){
+  alert("Modification impossible : "+error.message);
+  return;
+ }
+
+ await db.from("admin_audit_logs").insert({
+  admin_id:currentUser.id,
+  action:"modification commande : "+status,
+  target_type:"order",
+  target_id:id
+ });
+
+ alert("Statut de la commande modifié !");
+ await loadAdminDashboard();
+  }
+
+function contactWhatsApp(phone,name){
+ let number=String(phone||"").replace(/\D/g,"");
+ if(number.startsWith("0"))number="225"+number;
+ if(!number.startsWith("225"))number="225"+number;
+ if(number.length!==13){
+  alert("Numéro de téléphone invalide.");
+  return;
+ }
+ let message=encodeURIComponent("Bonjour "+name+", je vous contacte au sujet de votre commande sur Espoir Flash.");
+ window.open("https://wa.me/"+number+"?text="+message,"_blank");
+  }
+  async function loadAdminDashboard(){
+ if(!currentIsAdmin)return;
+
+ let stats=document.getElementById("adminStats");
+ let usersBox=document.getElementById("adminUsers");
+ let storesBox=document.getElementById("adminStores");
+ let productsBox=document.getElementById("adminProducts");let ordersBox=document.getElementById("adminOrders");
+let complaintsBox=document.getElementById("adminComplaints");if(!window.complaintsRealtime){
+ window.complaintsRealtime=db
+  .channel("complaints-notifications")
+  .on(
+   "postgres_changes",
+   {
+    event:"INSERT",
+    schema:"public",
+    table:"complaints"
+   },
+   async(payload)=>{
+    alert("🔔 Nouvelle réclamation reçue !");
+    await loadAdminDashboard();
+   }
+  )
+  .subscribe();
+  }
+ stats.innerHTML="Chargement des statistiques...";
+ usersBox.innerHTML="";
+ storesBox.innerHTML="";
+ productsBox.innerHTML="";
+ordersBox.innerHTML="Chargement des commandes...";
+    complaintsBox.innerHTML="Chargement des réclamations...";
+ let [usersResult,storesResult,productsResult]=await Promise.all([
+  db.from("profiles").select("id,full_name,phone,role,suspended,created_at"),
+  db.from("stores").select("id,owner_id,name,active,admin_disabled"),
+  db.from("products").select("id,name,price_fcfa,active,store_id")
+ ]);
+
+ if(usersResult.error||storesResult.error||productsResult.error){
+  stats.innerHTML="Erreur de chargement : "+(usersResult.error?.message||storesResult.error?.message||productsResult.error?.message);
+  return;
+ }
+
+ let users=usersResult.data||[];
+ let stores=storesResult.data||[];
+ let products=productsResult.data||[];
+let {data:allOrders,error:ordersError}=await db
+ .from("orders")
+ .select("id,customer_id,store_id,status,total_fcfa,delivery_address,created_at")
+ .order("created_at",{ascending:false});
+
+if(ordersError){
+ ordersBox.innerHTML="Erreur commandes : "+esc(ordersError.message);
+ return;
+  }let {data:allOrderItems,error:itemsError}=await db
+ .from("order_items")
+ .select("order_id,product_name,unit_price_fcfa,quantity");
+
+if(itemsError){
+ ordersBox.innerHTML="Erreur articles : "+esc(itemsError.message);
+ return;
+  }let {data:allComplaints,error:complaintsError}=await db
+ .from("complaints")
+ .select("id,user_id,order_id,subject,message,status,admin_reply,created_at")
+ .order("created_at",{ascending:false});
+
+if(complaintsError){
+ complaintsBox.innerHTML="Erreur réclamations : "+esc(complaintsError.message);
+ return;
+  }
+ stats.innerHTML=`
+  <div class="card">
+   <p>Utilisateurs : <strong>${users.length}</strong></p>
+   <p>Commerçants : <strong>${users.filter(u=>u.role==="merchant").length}</strong></p>
+   <p>Boutiques : <strong>${stores.length}</strong></p>
+   <p>Produits : <strong>${products.length}</strong></p>
+  </div>
+ `;
+
+usersBox.innerHTML="<h3>Utilisateurs</h3>"+users.map(u=>`
+ <div class="card">
+  <strong>${esc(u.full_name||"Sans nom")}</strong>
+  <p>${esc(u.phone||"Sans téléphone")} · ${esc(u.role||"client")}</p>
+  <p>Compte : ${u.suspended?"Suspendu":"Actif"}</p>
+  <button ${u.id===currentUser.id?"disabled":""} onclick="toggleUserSuspension('${u.id}',${!u.suspended})">
+   ${u.suspended?"Réactiver le compte":"Suspendre le compte"}
+  </button>
+ </div>
+`).join("");
+
+ storesBox.innerHTML="<h3>Boutiques</h3>"+stores.map(s=>`
+ <div class="card">
+  <strong>${esc(s.name)}</strong>
+  <p>Statut : ${s.admin_disabled?"Bloquée":s.active?"Active":"Inactive"}</p>
+  <button onclick="toggleStoreBlock('${s.id}',${!s.admin_disabled})">
+   ${s.admin_disabled?"Débloquer la boutique":"Bloquer la boutique"}
+  </button>
+ </div>
+`).join("");
+
+ productsBox.innerHTML="<h3>Produits</h3>"+products.map(p=>`
+ <div class="card">
+  <strong>${esc(p.name)}</strong>
+  <p>Prix : ${money(p.price_fcfa)}</p>
+  <p>Statut : ${p.active?"En vente":"Retiré"}</p>
+  <button onclick="toggleProductStatus('${p.id}',${!p.active})">
+   ${p.active?"Retirer de la vente":"Remettre en vente"}
+  </button>
+ </div>
+`).join("");
+    ordersBox.innerHTML="<h3>Toutes les commandes</h3>"+(allOrders||[]).map(o=>{
+ let customer=users.find(u=>u.id===o.customer_id);
+ let store=stores.find(s=>s.id===o.store_id);
+
+ return `
+  <div class="card">
+   <strong>Commande : ${esc(o.id.slice(0,8))}</strong>
+   <p>Client : ${esc(customer?.full_name||"Client inconnu")}</p>
+   <p>Boutique : ${esc(store?.name||"Boutique inconnue")}</p>
+   <p>Montant : <strong>${money(o.total_fcfa)}</strong></p>
+   <p><strong>Articles commandés :</strong></p>
+${allOrderItems.filter(item=>item.order_id===o.id).map(item=>`
+ <p>
+  ${esc(item.product_name)} —
+  ${item.quantity} × ${money(item.unit_price_fcfa)}
+ </p>
+`).join("")||"<p>Aucun article trouvé.</p>"}
+   <p>Statut : ${esc(statusFr(o.status))}</p>
+   <div>
+ <button onclick="adminUpdateOrderStatus('${o.id}','accepted')">Accepter</button>
+ <button onclick="adminUpdateOrderStatus('${o.id}','cancelled')">Refuser</button>
+ <button onclick="adminUpdateOrderStatus('${o.id}','completed')">Terminer</button>
+</div>
+   <p>Livraison : ${esc(o.delivery_address)}</p>
+   <p class="muted">${new Date(o.created_at).toLocaleString("fr-FR")}</p>
+  </div>
+ `;
+}).join("")||"<p>Aucune commande pour le moment.</p>";
+    let pendingComplaints=(allComplaints||[])
+ .filter(c=>c.status==="pending").length;
+let complaintBell=`
+ <div style="display:flex;align-items:center;gap:8px;margin:10px 0;">
+  <span style="font-size:24px;">🔔</span>
+  <strong>Nouvelles réclamations</strong>
+  <span style="background:red;color:white;padding:4px 9px;border-radius:50%;font-weight:bold;">
+   ${pendingComplaints}
+  </span>
+ </div>
+`;
+let complaintNotice=pendingComplaints>0
+ ? `<p style="color:red;font-weight:bold;">
+ 🔔 ${pendingComplaints} réclamation(s) en attente !
+ </p>`
+ : `<p>Aucune nouvelle réclamation.</p>`;
+    complaintsBox.innerHTML="<h3>Réclamations des clients</h3>"+complaintBell+(allComplaints||[]).map(c=>{
+ let customer=users.find(u=>u.id===c.user_id);
+
+ return `
+  <div class="card">
+   <strong>${esc(c.subject)}</strong>
+   <p>Client : ${esc(customer?.full_name||"Client inconnu")}</p>
+   <p>Message : ${esc(c.message)}</p>
+   <p>Commande : ${esc(c.order_id||"Non précisée")}</p>
+   <p>Statut : ${c.status==="resolved"?"Traitée":"En attente"}</p>
+   <p><strong>Réponse de l'administration :</strong> ${esc(c.admin_reply||"En attente de réponse")}</p>
+   <p><strong>Réponse de l'administration :</strong> ${esc(c.admin_reply||"En attente de réponse")}</p>
+   <textarea id="reply-${c.id}" placeholder="Écrire une réponse...">${esc(c.admin_reply||"")}</textarea>
+<button onclick="replyToComplaint('${c.id}')">Envoyer la réponse</button>
+   <button onclick="updateComplaintStatus('${c.id}','resolved')">Marquer comme traitée</button>
+   <button onclick="updateComplaintStatus('${c.id}','pending')">Remettre en attente</button>
+   <p class="muted">${new Date(c.created_at).toLocaleString("fr-FR")}</p>
+  </div>
+ `;
+}).join("")||"<p>Aucune réclamation pour le moment.</p>";
+    await loadAdminAuditLogs();
+  }
+  
+async function submitComplaint(){
+ if(!currentUser){
+  alert("Connecte-toi pour envoyer une réclamation.");
+  return;
+ }
+
+ let subject=document.getElementById("complaintSubject").value.trim();
+ let message=document.getElementById("complaintMessage").value.trim();
+
+ if(!subject||!message){
+  alert("Remplis le sujet et le message.");
+  return;
+ }
+
+ let {error}=await db.from("complaints").insert({
+  user_id:currentUser.id,
+  subject:subject,
+  message:message
+ });
+
+ if(error){
+  alert("Envoi impossible : "+error.message);
+  return;
+ }
+
+ alert("Réclamation envoyée avec succès !");
+ document.getElementById("complaintSubject").value="";
+ document.getElementById("complaintMessage").value="";
+  }async function loadMyComplaints(){
+ if(!currentUser)return;
+
+ let box=document.getElementById("myComplaints");
+
+ let {data,error}=await db.from("complaints")
+  .select("id,subject,message,status,admin_reply,admin_reply_seen,created_at")
+  .eq("user_id",currentUser.id)
+  .order("created_at",{ascending:false});
+
+ if(error){
+  box.innerHTML="Erreur de chargement : "+esc(error.message);
+  return;
+ }
+
+ let hasUnreadReply=(data||[]).some(c=>
+ c.admin_reply&&!c.admin_reply_seen
+);
+
+let alertPoint=document.getElementById("accountAlert");
+
+if(alertPoint){
+ alertPoint.style.display=hasUnreadReply?"inline":"none";
+  }box.innerHTML="<h3>Mes réclamations</h3>"+(data||[]).map(c=>`
+  <div class="card">
+   <strong>${esc(c.subject)}</strong>
+   <p>${esc(c.message)}</p>
+   <p>Statut : ${c.status==="resolved"?"Traitée":"En attente"}</p>
+   ${c.admin_reply&&!c.admin_reply_seen?'<p style="color:red;font-weight:bold;">🔔 Nouvelle réponse de l’administration !</p>':""}
+   <p><strong>Réponse de l'administration :</strong></p>
+   ${c.admin_reply&&!c.admin_reply_seen?`<button onclick="markComplaintReplySeen('${c.id}')">Marquer comme lu</button>`:""}
+   <p>${esc(c.admin_reply||"En attente de réponse")}</p>
+   <p class="muted">${new Date(c.created_at).toLocaleString("fr-FR")}</p>
+  </div>
+ `).join("")||"<p>Aucune réclamation pour le moment.</p>";
+  }async function markComplaintReplySeen(id){
+ if(!currentUser)return;
+
+ let {error}=await db.rpc("mark_complaint_reply_seen",{
+  p_complaint_id:id
+ });
+
+ if(error){
+  alert("Impossible de marquer comme lu : "+error.message);
+  return;
+ }
+
+ await loadMyComplaints();
+}
+async function updateComplaintStatus(id,status){
+ if(!currentIsAdmin)return;
+
+ let {error}=await db.from("complaints")
+  .update({status:status})
+  .eq("id",id);
+
+ if(error){
+  alert("Modification impossible : "+error.message);
+  return;
+ }
+
+ alert("Réclamation mise à jour !");
+ await loadAdminDashboard();
+  }async function replyToComplaint(id){
+ if(!currentIsAdmin)return;
+
+ let field=document.getElementById("reply-"+id);
+ let reply=field.value.trim();
+
+ if(!reply){
+  alert("Écris une réponse.");
+  return;
+ }
+
+ let {error}=await db.from("complaints")
+  .update({
+ admin_reply:reply,
+ admin_reply_seen:false
+})
+  .eq("id",id);
+
+ if(error){
+  alert("Envoi impossible : "+error.message);
+  return;
+ }
+
+ alert("Réponse envoyée au client !");
+ await loadAdminDashboard();
+  }
+async function loadAdminAuditLogs(){
+ if(!currentIsAdmin)return;
+
+ let box=document.getElementById("adminAuditLogs");
+ box.innerHTML="<h3>Journal d'administration</h3>Chargement...";
+
+ let {data,error}=await db
+  .from("admin_audit_logs")
+  .select("id,admin_id,action,target_type,target_id,created_at")
+  .order("created_at",{ascending:false})
+  .limit(50);
+
+ if(error){
+  box.innerHTML="Erreur : "+error.message;
+  return;
+ }
+
+ let labels={
+  suspension:"Compte suspendu",
+  réactivation:"Compte réactivé",
+  blocage:"Boutique bloquée",
+  déblocage:"Boutique débloquée",
+  "retrait de vente":"Produit retiré",
+  "remise en vente":"Produit remis en vente"
+ };
+
+ let userIds=[...new Set((data||[])
+  .filter(log=>log.target_type==="user")
+  .map(log=>log.target_id)
+  .concat((data||[]).map(log=>log.admin_id))
+  .filter(Boolean))];
+
+ let storeIds=[...new Set((data||[])
+  .filter(log=>log.target_type==="store")
+  .map(log=>log.target_id))];
+
+ let productIds=[...new Set((data||[])
+  .filter(log=>log.target_type==="product")
+  .map(log=>log.target_id))];
+
+ let users=[],stores=[],products=[];
+
+ if(userIds.length){
+  let r=await db.from("profiles")
+   .select("id,full_name")
+   .in("id",userIds);
+  users=r.data||[];
+ }
+
+ if(storeIds.length){
+  let r=await db.from("stores")
+   .select("id,name")
+   .in("id",storeIds);
+  stores=r.data||[];
+ }
+
+ if(productIds.length){
+  let r=await db.from("products")
+   .select("id,name")
+   .in("id",productIds);
+  products=r.data||[];
+ }
+
+ box.innerHTML="<h3>Journal d'administration</h3>"+(data||[]).map(log=>{
+  let admin=users.find(u=>u.id===log.admin_id);
+  let target=null;
+
+  if(log.target_type==="user"){
+   target=users.find(u=>u.id===log.target_id);
+  }else if(log.target_type==="store"){
+   target=stores.find(s=>s.id===log.target_id);
+  }else if(log.target_type==="product"){
+   target=products.find(p=>p.id===log.target_id);
+  }
+
+  return `
+   <div class="card">
+    <strong>${labels[log.action]||esc(log.action)}</strong>
+    <p>Administrateur : ${esc(admin?.full_name||"Administrateur")}</p>
+    <p>Cible : ${esc(target?.full_name||target?.name||"Nom indisponible")}</p>
+    <p>Type : ${esc(log.target_type)}</p>
+    <p>Date : ${new Date(log.created_at).toLocaleString("fr-FR")}</p>
+   </div>
+  `;
+ }).join("")||"<p>Aucune action enregistrée.</p>";
+}
+
+async function toggleUserSuspension(userId,suspended){
+ if(!currentIsAdmin)return;
+
+ let action=suspended?"suspendre":"réactiver";
+ if(!confirm("Veux-tu vraiment "+action+" ce compte ?"))return;
+
+ let {error}=await db.from("profiles")
+  .update({suspended:suspended})
+  .eq("id",userId);
+
+ if(error){
+  alert("Opération impossible : "+error.message);
+  return;
+ }
+
+ let log=await db.from("admin_audit_logs").insert({
+  admin_id:currentUser.id,
+  action:suspended?"suspension":"réactivation",
+  target_type:"user",
+  target_id:userId
+ });
+
+ if(log.error){
+  alert("Compte modifié, mais historique non enregistré : "+log.error.message);
+ }else{
+  alert(suspended?"Compte suspendu avec succès !":"Compte réactivé avec succès !");
+ }
+
+ await loadAdminDashboard();
+}
+
+async function toggleStoreBlock(storeId,blocked){
+ if(!currentIsAdmin)return;
+
+ let action=blocked?"bloquer":"débloquer";
+ if(!confirm("Veux-tu vraiment "+action+" cette boutique ?"))return;
+
+ let {error}=await db.from("stores")
+  .update({admin_disabled:blocked})
+  .eq("id",storeId);
+
+ if(error){
+  alert("Opération impossible : "+error.message);
+  return;
+ }
+
+ let log=await db.from("admin_audit_logs").insert({
+  admin_id:currentUser.id,
+  action:blocked?"blocage":"déblocage",
+  target_type:"store",
+  target_id:storeId
+ });
+
+ if(log.error){
+  alert("Boutique modifiée, mais historique non enregistré : "+log.error.message);
+ }else{
+  alert(blocked?"Boutique bloquée avec succès !":"Boutique débloquée avec succès !");
+ }
+
+ await loadAdminDashboard();
+}
+
+async function toggleProductStatus(productId,active){
+ if(!currentIsAdmin)return;
+
+ let action=active?"remettre en vente":"retirer de la vente";
+ if(!confirm("Veux-tu vraiment "+action+" ce produit ?"))return;
+
+ let {error}=await db.from("products")
+  .update({active:active})
+  .eq("id",productId);
+
+ if(error){
+  alert("Opération impossible : "+error.message);
+  return;
+ }
+
+ let log=await db.from("admin_audit_logs").insert({
+  admin_id:currentUser.id,
+  action:active?"remise en vente":"retrait de vente",
+  target_type:"product",
+  target_id:productId
+ });
+
+ if(log.error){
+  alert("Produit modifié, mais historique non enregistré : "+log.error.message);
+ }else{
+  alert(active?"Produit remis en vente !":"Produit retiré de la vente !");
+ }
+
+ await loadAdminDashboard();
+}
+async function start(){if(!initClient())return;let {data}=await db.auth.getSession();currentUser=data.session?.user||null;if(currentUser)await loadProfile();refreshAccount();await loadProducts();db.auth.onAuthStateChange(async(_event,session)=>{currentUser=session?.user||null;if(currentUser)await loadProfile();else{currentProfile=null;currentStore=null}refreshAccount()})}
+start();setInterval(()=>{
+ if(currentUser && !document.getElementById("orders").classList.contains("hidden")){
+  loadOrders();
+ }
+},10000);
+</script>
+</body></html>
