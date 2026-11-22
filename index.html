@@ -487,7 +487,7 @@ async function addProduct(){
  let price=Number(document.getElementById("newPrice").value);
  let stock=Number(document.getElementById("newStock").value);
  let category=document.getElementById("newCategory").value;
- let photo=document.querySelector('#productForm input[type="file"]').files[0];
+ let photo=document.getElementById("newPhoto").files[0];
 alert(photo ? "Photo détectée : "+photo.name : "Aucune photo détectée");
 
  if(!name||price<1||stock<0)
