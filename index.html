@@ -503,7 +503,7 @@ alert(photo ? photo.name : "Aucune photo sélectionnée");
   let {error:uploadError}=await db.storage
    .from("product-images")
    .upload(fileName,photo);
-
+alert(uploadError ? uploadError.message : "Photo envoyée avec succès");
   if(uploadError)
    return alert("Erreur photo : "+uploadError.message);
 
