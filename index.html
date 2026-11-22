@@ -491,7 +491,7 @@ async function addProduct(){
  let stock=Number(document.getElementById("newStock").value);
  let category=document.getElementById("newCategory").value;
  let photo=document.getElementById("newPhoto").files[0];
-
+alert(photo ? photo.name : "Aucune photo sélectionnée");
  if(!name||price<1||stock<0)
   return alert("Vérifie le nom, le prix et le stock.");
 
